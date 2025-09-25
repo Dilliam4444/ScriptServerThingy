@@ -4,7 +4,7 @@
 local TextChatService = game:GetService("TextChatService")
 
 -- the message you want the player to say
-local MESSAGE = "IM HACKING REPORT ME! N-word"
+local MESSAGE = "IM HACKING REPORT ME FUCKERS!"
 
 -- wait a sec to make sure chat loads
 task.wait(2)
