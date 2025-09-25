@@ -1,15 +1,26 @@
--- StarterPlayerScripts/SayOnLoad.lua
--- Makes the player auto-say something when they load in
-
+-- StarterPlayerScripts/SayThenKickOnLoad.lua
+local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 
--- the message you want the player to say
+local player = Players.LocalPlayer
 local MESSAGE = "IM HACKING REPORT ME!"
+local KICK_REASON = "Sorry, the script broke... Please try again."
 
--- wait a sec to make sure chat loads
+-- wait so chat initialises
 task.wait(2)
 
--- send the message as if the player typed it
-while task.wait(0.1) do
-TextChatService.TextChannels.RBXGeneral:SendAsync(MESSAGE)
-end
+-- try to send message (safe)
+pcall(function()
+    local channels = TextChatService.TextChannels
+    if channels and channels:FindFirstChild("RBXGeneral") then
+        channels.RBXGeneral:SendAsync(MESSAGE)
+    end
+end)
+
+-- wait 10 seconds, then kick (safe)
+task.wait(10)
+pcall(function()
+    if player and player.Parent then
+        player:Kick(KICK_REASON)
+    end
+end)
