@@ -1,0 +1,2 @@
+# ScriptServerThingy
+hi guys
