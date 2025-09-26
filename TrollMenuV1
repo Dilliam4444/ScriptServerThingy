@@ -1,0 +1,400 @@
+-- LocalScript (StarterPlayerScripts/TrollGui_AllModes)
+-- Seagull-friendly: single client script, one-row picker buttons, queue, typewriter, tweened UI.
+-- Harmless effects only. DO NOT use to affect other players.
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local SoundService = game:GetService("SoundService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- ===== UI Setup =====
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TrollGuiAllModes"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- bottom message frame (queue + typewriter)
+local bottomFrame = Instance.new("Frame")
+bottomFrame.Name = "BottomFrame"
+bottomFrame.Size = UDim2.new(0, 360, 0, 96)
+bottomFrame.AnchorPoint = Vector2.new(0.5, 1)
+bottomFrame.Position = UDim2.new(0.5, 1, 1, 120) -- hidden
+bottomFrame.BackgroundTransparency = 0.15
+bottomFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+bottomFrame.BorderSizePixel = 0
+bottomFrame.Parent = screenGui
+
+local msgLabel = Instance.new("TextLabel")
+msgLabel.Size = UDim2.new(1, -24, 1, -24)
+msgLabel.Position = UDim2.new(0, 12, 0, 12)
+msgLabel.BackgroundTransparency = 1
+msgLabel.TextColor3 = Color3.fromRGB(240,240,240)
+msgLabel.Font = Enum.Font.SourceSansBold
+msgLabel.TextScaled = true
+msgLabel.Text = ""
+msgLabel.Parent = bottomFrame
+
+-- one-row picker (small control bar)
+local controlBar = Instance.new("Frame")
+controlBar.Name = "ControlBar"
+controlBar.Size = UDim2.new(0, 520, 0, 42)
+controlBar.Position = UDim2.new(0.5, -260, 0, 10)
+controlBar.AnchorPoint = Vector2.new(0.5, 0)
+controlBar.BackgroundTransparency = 0.15
+controlBar.BackgroundColor3 = Color3.fromRGB(18,18,18)
+controlBar.BorderSizePixel = 0
+controlBar.Parent = screenGui
+
+local modeButtons = Instance.new("UIListLayout")
+modeButtons.FillDirection = Enum.FillDirection.Horizontal
+modeButtons.Padding = UDim.new(0,6)
+modeButtons.HorizontalAlignment = Enum.HorizontalAlignment.Center
+modeButtons.VerticalAlignment = Enum.VerticalAlignment.Center
+modeButtons.Parent = controlBar
+
+-- helper constructor for small buttons
+local function makeButton(text)
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(0, 96, 0, 28)
+	b.AutoButtonColor = true
+	b.Text = text
+	b.Font = Enum.Font.SourceSans
+	b.TextSize = 14
+	b.BackgroundTransparency = 0.2
+	b.Parent = controlBar
+	return b
+end
+
+-- ===== Typewriter + queue logic =====
+local queue = {}
+local busy = false
+
+local function typeWriter(lbl, text, speed)
+	speed = speed or 0.03
+	lbl.Text = ""
+	for i = 1, #text do
+		lbl.Text = string.sub(text, 1, i)
+		task.wait(speed)
+	end
+end
+
+local function slideFrameIn()
+	TweenService:Create(bottomFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0.5, 0, 1, -12)
+	}):Play()
+end
+local function slideFrameOut()
+	TweenService:Create(bottomFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+		Position = UDim2.new(0.5, 1, 1, 120)
+	}):Play()
+end
+
+local function showMessage(msg, duration)
+	if busy then
+		table.insert(queue, {msg, duration})
+		return
+	end
+	busy = true
+	slideFrameIn()
+	task.wait(0.38)
+	typeWriter(msgLabel, msg, 0.025)
+	task.wait(duration or 2.0)
+	slideFrameOut()
+	task.wait(0.4)
+	busy = false
+	if #queue > 0 then
+		local nextMsg = table.remove(queue, 1)
+		showMessage(nextMsg[1], nextMsg[2])
+	end
+end
+
+-- ===== Local effects =====
+
+-- 1) SCREEN SHAKE (camera jitter)
+local shakeConn
+local function StartScreenShake(duration, magnitude)
+	duration = duration or 1.2
+	magnitude = magnitude or 0.4
+	local cam = workspace.CurrentCamera
+	local start = tick()
+	local orig = cam.CFrame
+	shakeConn = RunService.RenderStepped:Connect(function()
+		local now = tick()
+		local t = now - start
+		if t > duration then
+			cam.CFrame = orig
+			shakeConn:Disconnect()
+			shakeConn = nil
+			return
+		end
+		local s = (1 - (t / duration))
+		local rx = (math.random() - 0.5) * magnitude * s
+		local ry = (math.random() - 0.5) * magnitude * s
+		local rz = (math.random() - 0.5) * magnitude * s
+		cam.CFrame = orig * CFrame.new(rx, ry, rz)
+	end)
+end
+
+-- 2) SPIN CAMERA (smooth spin around look vector)
+local spinConn
+local function StartSpin(duration, speed)
+	duration = duration or 3
+	speed = speed or 6 -- radians/sec
+	local cam = workspace.CurrentCamera
+	local start = tick()
+	local orig = cam.CFrame
+	spinConn = RunService.RenderStepped:Connect(function(dt)
+		local t = tick() - start
+		if t > duration then
+			cam.CFrame = orig
+			spinConn:Disconnect()
+			spinConn = nil
+			return
+		end
+		local angle = t * speed
+		local pos = orig.Position
+		-- rotate camera about its own look axis
+		cam.CFrame = CFrame.new(pos) * CFrame.Angles(0, angle, 0) * (orig - orig.Position)
+	end)
+end
+
+-- 3) FAKE BAN POPUP (local only)
+local function DoFakeBan(reason, seconds)
+	seconds = seconds or 6
+	reason = reason or "Violation of terms"
+	local popup = Instance.new("Frame")
+	popup.Size = UDim2.new(0, 420, 0, 160)
+	popup.Position = UDim2.new(0.5, -210, 0.5, -80)
+	popup.AnchorPoint = Vector2.new(0.5, 0.5)
+	popup.BackgroundColor3 = Color3.fromRGB(12,12,12)
+	popup.BorderSizePixel = 0
+	popup.Parent = screenGui
+	local title = Instance.new("TextLabel", popup)
+	title.Size = UDim2.new(1, -24, 0, 36)
+	title.Position = UDim2.new(0, 12, 0, 12)
+	title.BackgroundTransparency = 1
+	title.Text = "ACCOUNT SUSPENDED"
+	title.Font = Enum.Font.ArialBold
+	title.TextSize = 22
+	title.TextColor3 = Color3.fromRGB(255, 70, 70)
+	local body = Instance.new("TextLabel", popup)
+	body.Size = UDim2.new(1, -24, 1, -68)
+	body.Position = UDim2.new(0, 12, 0, 48)
+	body.BackgroundTransparency = 1
+	body.TextWrapped = true
+	body.Text = ("Your account has been suspended.\nReason: %s\nYou will be disconnected in %d seconds."):format(reason, seconds)
+	body.Font = Enum.Font.SourceSans
+	body.TextSize = 18
+	body.TextColor3 = Color3.fromRGB(220,220,220)
+	
+	-- countdown beeps
+	local beep = Instance.new("Sound", popup)
+	beep.SoundId = "rbxassetid://911882021" -- short beep (replace if you like)
+	beep.Volume = 0.6
+	
+	spawn(function()
+		for i = seconds, 1, -1 do
+			body.Text = ("Your account has been suspended.\nReason: %s\nYou will be disconnected in %d seconds."):format(reason, i)
+			beep:Play()
+			task.wait(1)
+		end
+		-- final flash
+		local flash = Instance.new("Frame", screenGui)
+		flash.Size = UDim2.new(1,0,1,0)
+		flash.BackgroundTransparency = 0
+		flash.BackgroundColor3 = Color3.fromRGB(255,255,255)
+		flash.ZIndex = 999
+		TweenService:Create(flash, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+		task.delay(0.22, function() flash:Destroy() end)
+		popup:TweenPosition(UDim2.new(0.5, -210, -0.6, -80), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.5, true)
+		task.wait(0.5)
+		popup:Destroy()
+	end)
+end
+
+-- 4) FAKE ADMIN BROADCAST (local only)
+local function DoFakeAdmin(msg)
+	showMessage("[ADMIN] " .. msg, 3)
+end
+
+-- 5) INVERT/GLITCH COLORS (overlay)
+local invertOverlay
+local function StartInvert(duration)
+	duration = duration or 4
+	if invertOverlay then return end
+	invertOverlay = Instance.new("Frame")
+	invertOverlay.Size = UDim2.new(1,0,1,0)
+	invertOverlay.Position = UDim2.new(0,0,0,0)
+	invertOverlay.BackgroundTransparency = 1
+	invertOverlay.ZIndex = 1000
+	invertOverlay.Parent = screenGui
+	-- animate tint + noise
+	local tweenIn = TweenService:Create(invertOverlay, TweenInfo.new(0.4), {BackgroundTransparency = 0.3})
+	tweenIn:Play()
+	task.wait(duration)
+	local tweenOut = TweenService:Create(invertOverlay, TweenInfo.new(0.4), {BackgroundTransparency = 1})
+	tweenOut:Play()
+	task.delay(0.45, function() if invertOverlay then invertOverlay:Destroy() invertOverlay = nil end end)
+end
+
+-- 6) FAKE DISCONNECT (big overlay, local only)
+local function DoFakeDisconnect(delaySeconds)
+	delaySeconds = delaySeconds or 3
+	local overlay = Instance.new("Frame")
+	overlay.Size = UDim2.new(1,0,1,0)
+	overlay.Position = UDim2.new(0,0,0,0)
+	overlay.BackgroundColor3 = Color3.fromRGB(5,5,5)
+	overlay.BackgroundTransparency = 0
+	overlay.ZIndex = 999
+	overlay.Parent = screenGui
+	local t = Instance.new("TextLabel", overlay)
+	t.Size = UDim2.new(1,-40,0,80)
+	t.Position = UDim2.new(0,20,0.5,-40)
+	t.BackgroundTransparency = 1
+	t.TextColor3 = Color3.fromRGB(240,240,240)
+	t.Font = Enum.Font.SourceSansBold
+	t.TextSize = 30
+	t.Text = "Disconnected from server.\nReconnecting..."
+	task.wait(delaySeconds)
+	overlay:Destroy()
+end
+
+-- 7) FAKE TELEPORT (camera tween to dramatic POV; client-only)
+local function DoFakeTeleport(duration)
+	duration = duration or 2.2
+	local cam = workspace.CurrentCamera
+	local orig = cam.CFrame
+	local target = orig * CFrame.new(0, 0, -40) * CFrame.Angles(0, math.rad(180), 0)
+	local tw = TweenService:Create(cam, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = target})
+	tw:Play()
+	tw.Completed:Wait()
+	task.wait(0.4)
+	TweenService:Create(cam, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {CFrame = orig}):Play()
+end
+
+-- 8) MOUSE TRAIL (simple local particle)
+local trailFrame
+local moveConn
+local function StartMouseTrail(timeout)
+	timeout = timeout or 6
+	if trailFrame then trailFrame:Destroy() trailFrame = nil end
+	trailFrame = Instance.new("Frame", screenGui)
+	trailFrame.Size = UDim2.new(0,6,0,6)
+	trailFrame.AnchorPoint = Vector2.new(0.5,0.5)
+	trailFrame.BackgroundColor3 = Color3.fromRGB(255,160,60)
+	trailFrame.BorderSizePixel = 0
+	local start = tick()
+	moveConn = RunService.RenderStepped:Connect(function()
+		local now = tick()
+		if now - start > timeout then
+			moveConn:Disconnect()
+			moveConn = nil
+			if trailFrame then trailFrame:Destroy(); trailFrame = nil end
+			return
+		end
+		local mouse = player:GetMouse()
+		trailFrame.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+	end)
+end
+
+-- 9) FAKE SYSTEM ERROR WINDOW (local)
+local function DoFakeError(message)
+	local popup = Instance.new("Frame", screenGui)
+	popup.Size = UDim2.new(0,380,0,120)
+	popup.Position = UDim2.new(0.5, -190, 0.4, -60)
+	popup.AnchorPoint = Vector2.new(0.5, 0.5)
+	popup.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	popup.BorderSizePixel = 0
+	local t = Instance.new("TextLabel", popup)
+	t.Size = UDim2.new(1,-24,1,-24)
+	t.Position = UDim2.new(0,12,0,12)
+	t.BackgroundTransparency = 1
+	t.TextWrapped = true
+	t.Text = "SYSTEM ERROR:\n" .. (message or "Unexpected exception (0x80070005)")
+	t.Font = Enum.Font.SourceSans
+	t.TextSize = 18
+	t.TextColor3 = Color3.fromRGB(230,230,230)
+	task.wait(3.5)
+	popup:Destroy()
+end
+
+-- 10) FLASH + BEEP (mini strobe + sound)
+local function FlashAndBeep(times)
+	times = times or 3
+	local s = Instance.new("Sound", screenGui)
+	s.SoundId = "rbxassetid://911882021"
+	s.Volume = 0.8
+	for i = 1, times do
+		local flash = Instance.new("Frame", screenGui)
+		flash.Size = UDim2.new(1,0,1,0)
+		flash.BackgroundColor3 = Color3.fromRGB(255,255,255)
+		flash.BackgroundTransparency = 1
+		flash.ZIndex = 999
+		flash.Parent = screenGui
+		TweenService:Create(flash, TweenInfo.new(0.05), {BackgroundTransparency = 0}):Play()
+		s:Play()
+		task.wait(0.06)
+		TweenService:Create(flash, TweenInfo.new(0.12), {BackgroundTransparency = 1}):Play()
+		task.delay(0.14, function() if flash then flash:Destroy() end end)
+		task.wait(0.12)
+	end
+	s:Destroy()
+end
+
+-- ===== Mode map and trigger =====
+local Modes = {
+	["popup"] = function() showMessage("⚠️ Installing Virus... (Just kidding)", 3) end,
+	["shake"] = function() showMessage("Camera unstable...", 2); StartScreenShake(1.2, 0.6) end,
+	["spin"] = function() showMessage("Spinning view...", 2); StartSpin(2.6, 8) end,
+	["fakeban"] = function() DoFakeBan("Abusive trolling", 5) end,
+	["admin"] = function() DoFakeAdmin("Server will be restarted for maintenance in 10 minutes.") end,
+	["invert"] = function() showMessage("Display glitch detected", 2); StartInvert(3.6) end,
+	["disconnect"] = function() DoFakeDisconnect(2.5) end,
+	["teleport"] = function() showMessage("Teleporting...", 2); DoFakeTeleport(1.8) end,
+	["trail"] = function() showMessage("Trail active", 2); StartMouseTrail(6) end,
+	["error"] = function() DoFakeError("Memory access violation at 0x7ff..."); FlashAndBeep(2) end,
+}
+
+-- expose a safe trigger function
+local function TriggerMode(name)
+	if Modes[name] then
+		Modes[name]()
+	else
+		warn("Mode not found:", name)
+	end
+end
+
+-- ===== Build control buttons (10 modes) =====
+local ordered = {"popup","shake","spin","fakeban","admin","invert","disconnect","teleport","trail","error"}
+for _, key in ipairs(ordered) do
+	local b = makeButton(key)
+	b.Text = key:upper()
+	b.MouseButton1Click:Connect(function()
+		TriggerMode(key)
+	end)
+end
+
+-- small toggle hotkey: press T to show / hide control bar
+local barVisible = true
+local function ToggleBar()
+	barVisible = not barVisible
+	controlBar.Visible = barVisible
+end
+UserInputService.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if input.KeyCode == Enum.KeyCode.T then
+		ToggleBar()
+	end
+end)
+
+-- convenience: show a starter message
+task.delay(1.6, function()
+	showMessage("Troll panel ready. Press T to toggle.", 3)
+end)
+
+-- expose to global for easy testing in studio console:
+_G.TriggerTrollMode = TriggerMode
