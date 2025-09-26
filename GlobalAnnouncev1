@@ -1,26 +1,55 @@
--- StarterPlayerScripts/SayThenKickOnLoad.lua
+-- OneScriptWhileThenRequest.lua (StarterPlayerScripts - LocalScript)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local TextChatService = game:GetService("TextChatService")
 
 local player = Players.LocalPlayer
+if not player then return end
+
+-- CONFIG
 local MESSAGE = "IM HACKING REPORT ME!"
-local KICK_REASON = "Sorry, the script broke... Please try again."
+local DURATION = 10      -- total seconds to run the while loop
+local INTERVAL = 0.1    -- wait() interval inside the while loop
+local BROADCAST_EVENT_NAME = "AdminBroadcastEvent" -- server-side RemoteEvent (server must exist and validate)
 
--- wait so chat initialises
-task.wait(2)
+-- simple GUI (local only)
+local gui = Instance.new("ScreenGui")
+gui.Name = "OneScriptLocalGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
 
--- try to send message (safe)
-pcall(function()
-    local channels = TextChatService.TextChannels
-    if channels and channels:FindFirstChild("RBXGeneral") then
-        channels.RBXGeneral:SendAsync(MESSAGE)
-    end
+local label = Instance.new("TextLabel")
+label.Size = UDim2.new(0.6, 0, 0.08, 0)
+label.Position = UDim2.new(0.2, 0, 0.05, 0)
+label.BackgroundTransparency = 0.4
+label.TextScaled = true
+label.Font = Enum.Font.SourceSansBold
+label.Text = ""
+label.Visible = false
+label.Parent = gui
+
+-- RUN the while/wait loop for the time window (local only)
+local start = os.clock()
+local count = 0
+while os.clock() - start < DURATION do
+    count = count + 1
+    label.Text = MESSAGE .. ("  — %d"):format(count)
+    label.Visible = true
+    wait(INTERVAL) -- the "while wait" style you asked for
+end
+label.Visible = false
+
+-- AFTER the loop finishes: request server broadcast (if RemoteEvent exists)
+local success, event = pcall(function()
+    return ReplicatedStorage:FindFirstChild(BROADCAST_EVENT_NAME)
 end)
 
--- wait 10 seconds, then kick (safe)
-task.wait(10)
-pcall(function()
-    if player and player.Parent then
-        player:Kick(KICK_REASON)
-    end
-end)
+if success and event and event:IsA("RemoteEvent") then
+    -- FireServer wrapped in pcall to avoid client errors if server rejects or missing handlers
+    pcall(function()
+        event:FireServer(MESSAGE)
+    end)
+else
+    -- no event found; harmless fallback
+    -- you can create the RemoteEvent on the server or place one in ReplicatedStorage named AdminBroadcastEvent
+    warn(("RemoteEvent '%s' not found in ReplicatedStorage. Broadcast request not sent."):format(BROADCAST_EVENT_NAME))
+end
