@@ -1,4 +1,4 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+  local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "🔪 MM2 CHEAT 🔪",
@@ -33,18 +33,81 @@ local Window = Rayfield:CreateWindow({
       FileName = "MM2 CHEAT HUM KEY", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
       SaveKey = false, -- The user's key will be saved, but if you change the key, they will be unable to use your script
       GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-      Key = {">Vo9+'qd0#d"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+      Key = {"Key"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
    }
 })
 
 local MainTab = Window:CreateTab("🏠 Home", nil) -- Title, Image
-local MainTab = Window:CreateTab("Main")
+local Section = Tab:CreateSection("Main")
 
 Rayfield:Notify({
-   Title = "Title",
-   Content = "Content",
+   Title = "Successfully loaded",
+   Content = "Thanks for using this script",
    Duration = 6.5,
-   Image = 4483362458,
+   Image = nil,
+})
+
+local Toggle = Tab:CreateToggle({
+   Name = "Highlight gun",
+   CurrentValue = false,
+   Flag = "Toggle", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Value)
+
+local Modules = ReplicatedStorage.Modules;
+local EmoteModule = Modules.EmoteModule;
+local Emotes = Client.PlayerGui.MainGUI.Game:FindFirstChild("Emotes");
+local EmoteList = {"headless","zombie","zen","ninja","floss","dab"};
+local CanGrab 
+CanGrab = false;
+
+local Origins = {{2,0,0},{-2,0,0},{0,2,0},{0,-2,0},{0,0,1},{0,0,-1}};
+
+local GunHighlight = Instance.new("Highlight");
+local GunHandleAdornment = Instance.new("SphereHandleAdornment");
+
+GunHighlight.FillColor = Color3.fromRGB(248, 241, 174);
+GunHighlight.Adornee = Workspace:FindFirstChild("GunDrop");
+GunHighlight.OutlineTransparency = 1;
+GunHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop;
+GunHighlight.RobloxLocked = true;
+
+GunHandleAdornment.Color3 = Color3.fromRGB(248, 241, 174);
+GunHandleAdornment.Transparency = 0.2;
+GunHandleAdornment.Adornee = Workspace:FindFirstChild("GunDrop");
+GunHandleAdornment.AlwaysOnTop = true;
+GunHandleAdornment.AdornCullingMode = Enum.AdornCullingMode.Never;
+GunHandleAdornment.RobloxLocked = true;
+
+GunHighlight.Parent = CoreGui;
+GunHandleAdornment.Parent = CoreGui;
+
+local TeleportDict = {
+    ["Lobby"] = Vector3.new(-121.12338256836, 138.27394104004, 38.946128845215),
+    ["Map"] = Vector3.new(-107.90824127197266, 138.34988403320312, -10.622464179992676),
+};
+local TeleportTable = {}
+for i, v in pairs(TeleportDict) do
+    table.insert(TeleportTable,i);
+end;
+
+local Murderer, Sheriff = nil, nil;
+
+function GetMurderer()
+    for i,v in pairs(Players:GetChildren()) do 
+        if v.Backpack:FindFirstChild("Knife") or v.Character:FindFirstChild("Knife") and v.Name == "Tool" then
+            return v.Name;
+        end;
+    end;
+    return nil;
+end;
+
+function GetSheriff()
+    for i,v in pairs(Players:GetChildren()) do 
+        if v.Backpack:FindFirstChild("Gun") or v.Character:FindFirstChild("Gun") and v.Name == "Tool" then
+            return v.Name;
+        end;
+        return nil;
+    end
 })
 
 
