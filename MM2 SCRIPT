@@ -1,6 +1,4 @@
-if game.PlaceID == 142823291 then
-    
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+  local Rayfield = loadstring(game:HttpGet('https://[Log in to view URL]'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "🔪 MM2 CHEAT 🔪",
@@ -8,7 +6,7 @@ local Window = Rayfield:CreateWindow({
    LoadingTitle = "loading ig",
    LoadingSubtitle = "by The cool hackers",
    ShowText = "Menu", -- for mobile users to unhide rayfield, change if you'd like
-   Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
+   Theme = "Default", -- Check https://[Log in to view URL]
 
    ToggleUIKeybind = "G", -- The keybind to toggle the UI visibility (string like "K" or Enum.KeyCode)
 
@@ -34,7 +32,20 @@ local Window = Rayfield:CreateWindow({
       Note = "Uhm, Basically do smth so we make money!", -- Use this to tell the user how to get a key
       FileName = "MM2 CHEAT HUM KEY", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
       SaveKey = false, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-      GrabKeyFromSite = true, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-      Key = {"https://pastebin.com/raw/1Nq32WXG"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+      Key = {">Vo9+'qd0#d"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
    }
 })
+
+local MainTab = Window:CreateTab("🏠 Home", nil) -- Title, Image
+local MainTab = Window:CreateTab("Main")
+
+Rayfield:Notify({
+   Title = "Title",
+   Content = "Content",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+
+
+
