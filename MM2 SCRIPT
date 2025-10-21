@@ -42,21 +42,21 @@ LP.CharacterAdded:Connect(function() task.wait(0.25); refreshChar() end)
 -- Rayfield
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
-    Name = "🔪 MM2 — Seagull Menu",
-    LoadingTitle = "Seagull UI",
-    LoadingSubtitle = "OP Edition",
+    Name = "🔪 MM2 MENU",
+    LoadingTitle = "By Hax4U",
+    LoadingSubtitle = "1.0",
     Theme = "Default",
     ToggleUIKeybind = "K",
     DisableRayfieldPrompts = false,
     DisableBuildWarnings = false,
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = "SeagullProjects",
-        FileName  = "MM2_Seagull_OP"
+        FolderName = "Hax4UProjects",
+        FileName  = "MM2_Hax4U_OP"
     },
     Discord = {
         Enabled = false, -- if you want Rayfield’s built-in join badge, set true + Invite code
-        Invite = "your-server-code",
+        Invite = "tM6rTDhE",
         RememberJoins = true
     }
 })
