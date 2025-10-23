@@ -43,7 +43,7 @@ LP.CharacterAdded:Connect(function() task.wait(0.25); refreshChar() end)
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
     Name = "🔪 MM2 MENU",
-    LoadingTitle = "By Esploin",
+    LoadingTitle = "By Epsilon",
     LoadingSubtitle = "1.0",
     Theme = "Default",
     ToggleUIKeybind = "K",
@@ -51,8 +51,8 @@ local Window = Rayfield:CreateWindow({
     DisableBuildWarnings = false,
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = "EsploinProjects",
-        FileName  = "MM2_Esploin_OP"
+        FolderName = "EpsilonProjects",
+        FileName  = "MM2_Epsilon_OP"
     },
     Discord = {
         Enabled = true, -- if you want Rayfield’s built-in join badge, set true + Invite code
