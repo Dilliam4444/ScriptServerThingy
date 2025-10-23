@@ -21,7 +21,7 @@ local RP      = game:GetService("ReplicatedStorage")
 
 -- Helpers
 local function tip(t, x, d) pcall(function()
-    SG:SetCore("SendNotification", {Title=t or "Seagull", Text=x or "", Duration=d or 4})
+    SG:SetCore("SendNotification", {Title=t or "Esploin", Text=x or "", Duration=d or 4})
 end) end
 local function v3(x,y,z) return Vector3.new(x,y,z) end
 
@@ -43,7 +43,7 @@ LP.CharacterAdded:Connect(function() task.wait(0.25); refreshChar() end)
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
     Name = "🔪 MM2 MENU",
-    LoadingTitle = "By Hax4U",
+    LoadingTitle = "By Esploin",
     LoadingSubtitle = "1.0",
     Theme = "Default",
     ToggleUIKeybind = "K",
@@ -51,11 +51,11 @@ local Window = Rayfield:CreateWindow({
     DisableBuildWarnings = false,
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = "Hax4UProjects",
-        FileName  = "MM2_Hax4U_OP"
+        FolderName = "EsploinProjects",
+        FileName  = "MM2_Esploin_OP"
     },
     Discord = {
-        Enabled = false, -- if you want Rayfield’s built-in join badge, set true + Invite code
+        Enabled = true, -- if you want Rayfield’s built-in join badge, set true + Invite code
         Invite = "tM6rTDhE",
         RememberJoins = true
     }
