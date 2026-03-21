@@ -36,3 +36,7 @@ There may be some ones that we HAVENT made but like who cares.
 Also access the raw code in the raw code thing where the raw code is.
 ( i did not try to fit the word "Raw code" in there as many times as i could)
 
+SCRIPTS:
+
+Sab duel script: loadstring(game:HttpGet("https://raw.githubusercontent.com/Dilliam4444/ScriptServerThingy/refs/heads/main/SabDuelScript",true))()
+
