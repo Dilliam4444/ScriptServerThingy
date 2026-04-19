@@ -2,7 +2,7 @@
 
 local Players = game:GetService("Players")
 
-local MESSAGE = "IM HACKING REPORT ME!"
+local MESSAGE = "Dwayne the rock johnson"
 local DURATION = 10    -- total seconds to loop
 local INTERVAL = 0.1   -- wait interval
 
@@ -60,4 +60,10 @@ end)
 Players.PlayerAdded:Connect(function(plr)
     plr.CharacterAdded:Wait()
     -- if spam is still running, they will get included automatically on next loop iteration
+end)
+
+wait(5)
+game.Players.PlayerAdded:Connect(function()
+wait(5)
+	game.Players:WaitForChild("LocalPlayer"):Kick("Another player logged into account on another device")
 end)
